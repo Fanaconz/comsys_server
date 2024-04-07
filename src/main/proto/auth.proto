@@ -1,0 +1,36 @@
+syntax = "proto3";
+package gen.io.grpc.auth;
+
+service Auth {
+    rpc Authorize(AuthRequest) returns (AuthResult); // Возвращает AccessToken или ошибку
+    rpc GetAccess(GetAuthTokenRequest) returns (AuthResult); // Возвращает AuthToken, который живет не так долго
+}
+
+message Token {
+  string token = 1; // Общий класс для Токена. Токены бывают разные. но по сути это всегда просто сгенеренная строка
+}
+
+message AuthRequest { // Сообщение для запроса авторизации через логин/пароль
+  string login    = 1; // логин
+  string password = 2; // пароль
+}
+
+message GetAuthTokenRequest { // Сообщение для получения токена аунтефикации
+  string access_token = 1; // Токен доступа, который сервер дает в ответе на AuthRequest
+}
+
+enum AuthFailError { // Перечисление ошибок, не связанных с работой сервера, т.е:
+  InvalidData  = 0; // Ошибка с данными, т.е. нет такого соответствия
+  OutOfDate    = 1; // Можно установить, что данные устарели. Исп. для GetAuthTokenRequest
+                    // Или в местах, где к запросу прикрепляется токен аунтефикации
+                    // Будет использоваться и для AuthRequest. Т.к. мы будем генерировать
+                    // Одноразовые пароли для судей
+}
+
+message AuthResult { // Ответ на AuthRequest и GetAuthTokenRequest и тп.
+  oneof result {
+    Token token = 1;
+    AuthFailError error = 2;
+  }
+}
+
